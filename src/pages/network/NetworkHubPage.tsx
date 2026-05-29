@@ -10,6 +10,9 @@ import {
   HistoryIcon,
   FlaskConicalIcon,
   GitBranchIcon,
+  LayersIcon,
+  BuildingIcon,
+  PlugIcon,
 } from "lucide-react";
 import { fetchNetworkGraph } from "@/api/network";
 import { fetchCorridors } from "@/api/corridors";
@@ -79,6 +82,30 @@ const tools = [
     icon: GitBranchIcon,
     color: "text-pink-500",
     bg: "bg-pink-50 dark:bg-pink-950/20",
+  },
+  {
+    title: "Modal Layers",
+    desc: "Toggle map layers by transport mode — bus, BRT, rail, ferry, cycling, pedestrian.",
+    to: "/network/modal",
+    icon: LayersIcon,
+    color: "text-amber-500",
+    bg: "bg-amber-50 dark:bg-amber-950/20",
+  },
+  {
+    title: "Agencies",
+    desc: "Compare agency stats and map cross-agency transfer quality scores.",
+    to: "/network/agencies",
+    icon: BuildingIcon,
+    color: "text-indigo-500",
+    bg: "bg-indigo-50 dark:bg-indigo-950/20",
+  },
+  {
+    title: "Interop Registry",
+    desc: "Map bikeshare, park-and-ride, taxi ranks and other interchange points. Define station levels and pathways.",
+    to: "/network/interop",
+    icon: PlugIcon,
+    color: "text-teal-500",
+    bg: "bg-teal-50 dark:bg-teal-950/20",
   },
 ];
 

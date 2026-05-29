@@ -1,4 +1,4 @@
-import { apiService } from "./client";
+import { apiService, API_BASE_URL } from "./client";
 import type {
   DataQualityScore,
   DuplicateStopPair,
@@ -63,18 +63,23 @@ export async function fetchOfficialValidation(): Promise<OfficialValidationResul
 }
 
 export async function exportAs(format: "gtfs" | "gtfs-flex" | "excel" | "netex"): Promise<void> {
-  const res = await apiService.post(
-    "/v1/console/gtfs/export-as",
-    { format },
-    { responseType: "blob" }
-  );
+  const token = apiService.getToken();
 
-  const mimeMap: Record<string, string> = {
-    "gtfs":      "application/zip",
-    "gtfs-flex": "application/zip",
-    "excel":     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "netex":     "application/xml",
-  };
+  const res = await fetch(`${API_BASE_URL}/v1/console/gtfs/export-as`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/octet-stream",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ format }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Export failed (${res.status}): ${text.slice(0, 120)}`);
+  }
+
   const extMap: Record<string, string> = {
     "gtfs":      "gtfs.zip",
     "gtfs-flex": "gtfs-flex.zip",
@@ -82,7 +87,7 @@ export async function exportAs(format: "gtfs" | "gtfs-flex" | "excel" | "netex")
     "netex":     "hopln_netex.xml",
   };
 
-  const blob = new Blob([res.data], { type: mimeMap[format] ?? "application/octet-stream" });
+  const blob = await res.blob();
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement("a");
   a.href     = url;

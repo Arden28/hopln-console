@@ -6,6 +6,7 @@ export interface FetchRoutesParams {
   per_page?: number;
   search?: string;
   route_type?: string;
+  agency_id?: string;
   sort?: string;
   order?: "asc" | "desc";
 }

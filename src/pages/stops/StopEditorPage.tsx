@@ -61,7 +61,9 @@ import {
   PlusIcon,
   RotateCcwIcon,
   NavigationIcon,
+  NetworkIcon,
 } from "lucide-react";
+import { PathwayEditorDialog } from "@/components/PathwayEditorDialog";
 import type { Contribution, Route, Stop, StopTime } from "@/types";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN ?? "";
@@ -126,6 +128,9 @@ export function StopEditorPage() {
   const [geocodeQuery, setGeocodeQuery] = React.useState("");
   const [geocodeOpen, setGeocodeOpen] = React.useState(false);
   const debouncedGeocode = useDebounce(geocodeQuery, 400);
+
+  // ── Station anatomy state ─────────────────────────────────────
+  const [pathwayDialogOpen, setPathwayDialogOpen] = React.useState(false);
 
   // ── Combobox state ────────────────────────────────────────────
   const [parentOpen, setParentOpen]     = React.useState(false);
@@ -647,6 +652,28 @@ export function StopEditorPage() {
                   </>
                 )}
 
+                {/* Station Anatomy (edit only — station stops) */}
+                {isEdit && !form.parent_sta && (
+                  <>
+                    <Separator />
+                    <div className="space-y-1.5">
+                      <Label className="text-sm">Station Anatomy</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Define internal levels and pathway connections for this station.
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full gap-1.5"
+                        onClick={() => setPathwayDialogOpen(true)}
+                      >
+                        <NetworkIcon className="size-3.5" />
+                        Edit Levels & Pathways
+                      </Button>
+                    </div>
+                  </>
+                )}
+
                 {/* Create button (new stop only) */}
                 {!isEdit && (
                   <Button
@@ -1141,6 +1168,15 @@ export function StopEditorPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {isEdit && id && (
+        <PathwayEditorDialog
+          open={pathwayDialogOpen}
+          onClose={() => setPathwayDialogOpen(false)}
+          stopId={id}
+          stopName={form.name}
+        />
+      )}
     </div>
   );
 }

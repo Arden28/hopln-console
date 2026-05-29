@@ -3,10 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import Map, { Source, Layer } from "react-map-gl/mapbox";
 import type { MapRef, MapMouseEvent } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { fetchNetworkGraph } from "@/api/network";
+import { fetchNetworkGraph, fetchNetworkAgencies } from "@/api/network";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NetworkIcon, SearchIcon, XIcon } from "lucide-react";
 import type { NetworkNode, NetworkEdge } from "@/types";
 
@@ -17,10 +18,17 @@ export default function NetworkGraphPage() {
   const mapRef = React.useRef<MapRef>(null);
   const [search, setSearch] = React.useState("");
   const [selected, setSelected] = React.useState<NetworkNode | null>(null);
+  const [agencyFilter, setAgencyFilter] = React.useState<string>("all");
+
+  const { data: agencies } = useQuery({
+    queryKey: ["network:agencies"],
+    queryFn: fetchNetworkAgencies,
+    staleTime: 300_000,
+  });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["network:graph"],
-    queryFn: fetchNetworkGraph,
+    queryKey: ["network:graph", agencyFilter],
+    queryFn: () => fetchNetworkGraph(agencyFilter === "all" ? undefined : agencyFilter),
     staleTime: 60_000,
   });
 
@@ -95,6 +103,19 @@ export default function NetworkGraphPage() {
             <NetworkIcon size={16} />
             Network Graph
           </div>
+          <Select value={agencyFilter} onValueChange={setAgencyFilter}>
+            <SelectTrigger className="h-8 text-xs mb-2">
+              <SelectValue placeholder="All agencies" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All agencies</SelectItem>
+              {agencies?.map((a) => (
+                <SelectItem key={a.agency_id} value={a.agency_id}>
+                  {a.agency_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <div className="relative">
             <SearchIcon size={14} className="absolute left-2.5 top-2.5 text-muted-foreground" />
             <Input

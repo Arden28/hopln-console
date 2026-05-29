@@ -8,8 +8,33 @@ import type {
   WalkShedResult,
 } from "@/types";
 
-export async function fetchNetworkGraph(): Promise<NetworkGraphData> {
-  const res = await apiService.get<NetworkGraphData>("/v1/console/network/graph");
+export async function fetchNetworkGraph(agencyId?: string): Promise<NetworkGraphData> {
+  const q = agencyId ? buildQuery({ agency_id: agencyId }) : '';
+  const res = await apiService.get<NetworkGraphData>(`/v1/console/network/graph${q}`);
+  return res.data;
+}
+
+export async function fetchNetworkAgencies(): Promise<
+  Array<{ agency_id: string; agency_name: string; route_count: number; stop_count: number; trip_count: number }>
+> {
+  const res = await apiService.get('/v1/console/network/agencies');
+  return res.data as Array<{ agency_id: string; agency_name: string; route_count: number; stop_count: number; trip_count: number }>;
+}
+
+export async function fetchCrossAgencyTransfers(): Promise<
+  Array<{ stop_id: string; stop_name: string; lat: number; lng: number; agencies: string[]; transfer_quality_score: number; min_transfer_gap_min: number }>
+> {
+  const res = await apiService.get('/v1/console/network/cross-agency-transfers');
+  return res.data as Array<{ stop_id: string; stop_name: string; lat: number; lng: number; agencies: string[]; transfer_quality_score: number; min_transfer_gap_min: number }>;
+}
+
+export async function fetchModalLayers(): Promise<{ layers: Record<string, unknown>; osm_refreshed_at?: string }> {
+  const res = await apiService.get('/v1/console/network/modal-layers');
+  return res.data as { layers: Record<string, unknown>; osm_refreshed_at?: string };
+}
+
+export async function refreshOsmLayer(layer: 'cycling' | 'pedestrian'): Promise<{ message: string; count: number }> {
+  const res = await apiService.post<{ message: string; count: number }>('/v1/console/network/modal-layers/refresh-osm', { layer });
   return res.data;
 }
 

@@ -4,9 +4,12 @@ import {
   LayoutDashboardIcon, GitPullRequestIcon, MapPinIcon,
   RouteIcon, UsersIcon, BarChart2Icon, BellIcon, ZapIcon, CalendarClockIcon,
   CalendarDaysIcon, DatabaseIcon, NetworkIcon, MapIcon, TrendingUpIcon,
-  Share2Icon, HistoryIcon, FlaskConicalIcon, GitBranchIcon,
+  Share2Icon, HistoryIcon, FlaskConicalIcon, GitBranchIcon, ScaleIcon,
   TableIcon, ClockIcon, CalendarRangeIcon,
   ShieldCheckIcon, ScanSearchIcon, RouteOffIcon,
+  LayersIcon, BuildingIcon, PlugIcon, TicketIcon,
+  BusIcon, BanknoteIcon, WalletIcon, SlidersHorizontalIcon,
+  RadioIcon, GaugeIcon, AlertTriangleIcon, ShieldAlertIcon, PlayCircleIcon,
 } from "lucide-react";
 import { fetchOverview } from "@/api/dashboard";
 import { NavMain } from "@/components/nav-main";
@@ -56,6 +59,41 @@ const useSections = (pendingCount?: number) => [
       { title: "Snapshots",      to: "/network/snapshots",      icon: HistoryIcon },
       { title: "Scenarios",      to: "/network/scenarios",      icon: FlaskConicalIcon },
       { title: "Variants",       to: "/network/variants",       icon: GitBranchIcon },
+      { title: "Modal Layers",   to: "/network/modal",          icon: LayersIcon },
+      { title: "Agencies",       to: "/network/agencies",              icon: BuildingIcon },
+      { title: "Comparison",     to: "/network/agencies/comparison",   icon: ScaleIcon },
+      { title: "Interop",        to: "/network/interop",        icon: PlugIcon },
+    ],
+  },
+  {
+    title: "Fares",
+    items: [
+      { title: "Fare Manager",  to: "/fares", icon: TicketIcon },
+    ],
+  },
+  {
+    title: "Fleet",
+    items: [
+      { title: "Vehicles", to: "/fleet/vehicles", icon: BusIcon },
+      { title: "Drivers",  to: "/fleet/drivers",  icon: UsersIcon },
+    ],
+  },
+  {
+    title: "Ledger",
+    items: [
+      { title: "Settlement",   to: "/ledger",              icon: BanknoteIcon },
+      { title: "Wallets",      to: "/ledger/wallets",      icon: WalletIcon },
+      { title: "Split Config", to: "/ledger/split-config", icon: SlidersHorizontalIcon },
+    ],
+  },
+  {
+    title: "Real-Time",
+    items: [
+      { title: "Live Map",    to: "/ops/live",        icon: RadioIcon },
+      { title: "Performance", to: "/ops/performance", icon: GaugeIcon },
+      { title: "Alerts",      to: "/ops/alerts",      icon: AlertTriangleIcon },
+      { title: "Incidents",   to: "/ops/incidents",   icon: ShieldAlertIcon },
+      { title: "Playback",    to: "/ops/playback",    icon: PlayCircleIcon },
     ],
   },
   {

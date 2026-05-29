@@ -499,3 +499,339 @@ export interface OfficialValidationResult {
     env_vars: Record<string, string>;
   };
 }
+
+// ── Category 5 — Multi-Modal & Multi-Agency ───────────────────────────────────
+
+// Feature 29 — Modal Layers
+export interface ModalLayerData {
+  label: string;
+  color: string;
+  count: number;
+  features: GeoJSON.Feature[];
+  osm?: boolean;
+}
+export interface ModalLayersResponse {
+  layers: Record<string, ModalLayerData>;
+  osm_refreshed_at?: string;
+}
+
+// Feature 30 — Fares
+export interface FareZone {
+  id: number;
+  zone_id: string;
+  name: string;
+  agency_id: string;
+  color: string;
+  geojson: GeoJSON.Geometry | null;
+}
+export interface FareAttribute {
+  id: number;
+  fare_id: string;
+  price: number;
+  currency_type: string;
+  payment_method: 0 | 1;
+  transfers: 0 | 1 | 2 | null;
+  transfer_duration: number | null;
+  agency_id: string;
+  fare_rules?: FareRule[];
+}
+export interface FareRule {
+  id: number;
+  fare_id: string;
+  route_id?: string;
+  origin_id?: string;
+  destination_id?: string;
+  contains_id?: string;
+}
+export interface FarePreview {
+  found: boolean;
+  fare_id?: string;
+  price?: number;
+  base_price?: number;
+  effective_price?: number;
+  currency_type?: string;
+  payment_method?: 0 | 1;
+  transfers?: 0 | 1 | 2 | null;
+  resolved_via?: "zone_to_zone" | "route_based" | "catch_all";
+  modifiers_applied?: Array<{
+    id: number;
+    name: string;
+    type: string;
+    multiplier: number | null;
+    fixed_surcharge: number | null;
+  }>;
+}
+
+export type FareModifierType = "weather" | "event" | "peak_hours" | "day_of_week";
+export type FareModifierScope = "all" | "agency" | "route" | "zone";
+
+export interface FareModifier {
+  id: number;
+  name: string;
+  type: FareModifierType;
+  applies_to: FareModifierScope;
+  applies_to_id: string | null;
+  multiplier: number | null;
+  fixed_surcharge: number | null;
+  condition_data: Record<string, unknown> | null;
+  is_active: boolean;
+  start_at: string | null;
+  end_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RouteFare {
+  id: number;
+  fare_id: string;
+  route_id: string;
+  price: number;
+  currency_type: string;
+  payment_method: 0 | 1;
+  agency_id: string | null;
+  route?: Pick<Route, "route_id" | "route_short_name" | "route_long_name">;
+}
+
+// Feature 31 — Multi-Agency
+export interface AgencyStats {
+  agency_id: string;
+  agency_name: string;
+  route_count: number;
+  stop_count: number;
+  trip_count: number;
+}
+export interface CrossAgencyTransfer {
+  stop_id: string;
+  stop_name: string;
+  lat: number;
+  lng: number;
+  agencies: string[];
+  transfer_quality_score: number;
+  min_transfer_gap_min: number;
+}
+
+// Feature 32 — Interop Registry + Pathways + Levels
+export type InteropEntryType =
+  | 'bikeshare' | 'park_and_ride' | 'taxi_rank' | 'airport_terminal'
+  | 'ferry_terminal' | 'brt_station' | 'rail_station';
+
+export interface InteropEntry {
+  id: number;
+  name: string;
+  type: InteropEntryType;
+  lat: number;
+  lng: number;
+  description?: string;
+  gtfs_stop_id?: string;
+  connections?: Record<string, unknown>;
+}
+export interface Level {
+  id: number;
+  level_id: string;
+  level_index: number;
+  level_name: string;
+  stop_id: string;
+}
+export type PathwayMode = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export interface Pathway {
+  id: number;
+  pathway_id: string;
+  from_stop_id: string;
+  to_stop_id: string;
+  pathway_mode: PathwayMode;
+  is_bidirectional: boolean;
+  length?: number;
+  traversal_time?: number;
+  stair_count?: number;
+  max_slope?: number;
+  min_width?: number;
+  signposted_as?: string;
+  reversed_signposted_as?: string;
+}
+
+// ── Category 3 — Fleet, Ledger & Real-Time Operations ────────────────────────
+
+// Fleet
+export interface Vehicle {
+  id: number;
+  plate: string;
+  agency_id: string | null;
+  route_id: string | null;
+  model: string | null;
+  capacity: number | null;
+  status: "active" | "inactive" | "suspended";
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  agency?: Pick<Agency, "agency_id" | "agency_name">;
+  route?: Pick<Route, "route_id" | "route_short_name">;
+  drivers?: Driver[];
+}
+
+export interface Driver {
+  id: number;
+  name: string;
+  phone: string | null;
+  license_no: string | null;
+  vehicle_id: number | null;
+  status: "active" | "inactive";
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  vehicle?: Pick<Vehicle, "id" | "plate">;
+}
+
+// Ledger
+export interface SplitConfig {
+  id: number;
+  agency_id: string | null;
+  vehicle_pct: number;
+  sacco_pct: number;
+  platform_pct: number;
+  is_active: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Wallet {
+  id: number;
+  entity_type: "vehicle" | "agency" | "platform";
+  entity_id: string;
+  label: string;
+  balance: number;
+  currency: string;
+  last_credited_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WalletTransaction {
+  id: number;
+  wallet_id: number;
+  type: "credit" | "debit" | "hold" | "release";
+  amount: number;
+  balance_after: number;
+  reference: string | null;
+  description: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface FleetRevenueSummary {
+  vehicle_id: number;
+  plate: string;
+  route_id: string | null;
+  total_revenue: number;
+  split_count: number;
+  last_split_at: string | null;
+}
+
+export interface RouteRevenueSummary {
+  route_id: string;
+  route_short_name: string | null;
+  total_revenue: number;
+  split_count: number;
+}
+
+// Real-Time
+export interface VehiclePosition {
+  id: number;
+  vehicle_id: number;
+  trip_id: string | null;
+  lat: number;
+  lng: number;
+  bearing: number | null;
+  speed_kmh: number | null;
+  recorded_at: string;
+  vehicle?: Pick<Vehicle, "id" | "plate">;
+}
+
+export interface GhostTrip {
+  trip_id: string;
+  headsign: string | null;
+  route_id: string;
+  route_short_name: string | null;
+  route_color: string | null;
+  first_stop_lat: number | null;
+  first_stop_lng: number | null;
+}
+
+export interface LivePositionResponse {
+  positions: VehiclePosition[];
+  ghost_trips: GhostTrip[];
+  active_vehicle_count: number;
+}
+
+export interface LiveStats {
+  active_vehicles: number;
+  avg_delay_s: number;
+  on_time_pct: number;
+}
+
+export interface DelayDashboard {
+  on_time_pct: number;
+  avg_delay_s: number;
+  trips_tracked: number;
+  worst_routes: Array<{
+    route_id: string;
+    avg_delay_s: number;
+    on_time_pct: number;
+    sparkline: number[];
+  }>;
+}
+
+export interface DelayHeatmapCell {
+  day_of_week: number;
+  hour_of_day: number;
+  avg_delay_s: number;
+  sample_count: number;
+}
+
+// Service Alerts
+export interface ServiceAlert {
+  id: number;
+  title: string;
+  description: string | null;
+  severity: "info" | "warning" | "critical";
+  effect: "detour" | "reduced_service" | "cancellation" | "other";
+  status: "draft" | "active" | "expired";
+  affected_type: "route" | "stop" | "all";
+  affected_id: string | null;
+  starts_at: string;
+  ends_at: string | null;
+  auto_generated: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Incidents
+export interface Incident {
+  id: number;
+  type: "accident" | "near_miss" | "crime" | "infrastructure" | "other";
+  severity: "low" | "medium" | "high" | "critical";
+  status: "open" | "investigating" | "resolved";
+  route_id: string | null;
+  stop_id: string | null;
+  vehicle_id: number | null;
+  description: string;
+  response_taken: string | null;
+  resolved_at: string | null;
+  resolution_time_mins: number | null;
+  reported_by: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  vehicle?: Pick<Vehicle, "id" | "plate">;
+}
+
+export interface IncidentStats {
+  open_count: number;
+  critical_count: number;
+  resolved_this_month: number;
+  avg_resolution_mins: number | null;
+  by_type: Record<string, number>;
+  by_severity: Record<string, number>;
+}

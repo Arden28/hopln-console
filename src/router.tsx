@@ -35,6 +35,23 @@ import CalendarBulkEditorPage from "@/pages/calendars/CalendarBulkEditorPage";
 import DataQualityPage from "@/pages/quality/DataQualityPage";
 import ShapeInspectorPage from "@/pages/quality/ShapeInspectorPage";
 import DuplicateDetectorPage from "@/pages/stops/DuplicateDetectorPage";
+import MultiModalLayerPage from "@/pages/network/MultiModalLayerPage";
+import AgencyComparisonPage from "@/pages/network/AgencyComparisonPage";
+import { AgenciesPage } from "@/pages/network/AgenciesPage";
+import { AgencyDetailPage } from "@/pages/network/AgencyDetailPage";
+import InteropRegistryPage from "@/pages/network/InteropRegistryPage";
+import FareManagerPage from "@/pages/fares/FareManagerPage";
+import { VehiclesPage } from "@/pages/fleet/VehiclesPage";
+import { DriversPage } from "@/pages/fleet/DriversPage";
+import { LedgerDashboardPage } from "@/pages/ledger/LedgerDashboardPage";
+import { SplitConfigPage } from "@/pages/ledger/SplitConfigPage";
+import { WalletsPage } from "@/pages/ledger/WalletsPage";
+import { WalletDetailPage } from "@/pages/ledger/WalletDetailPage";
+import { LiveVehicleMapPage } from "@/pages/ops/LiveVehicleMapPage";
+import { OnTimePerformancePage } from "@/pages/ops/OnTimePerformancePage";
+import { ServiceAlertsPage } from "@/pages/ops/ServiceAlertsPage";
+import { IncidentLogPage } from "@/pages/ops/IncidentLogPage";
+import { PositionPlaybackPage } from "@/pages/ops/PositionPlaybackPage";
 
 const rootRoute = createRootRoute({ component: Outlet });
 
@@ -97,6 +114,29 @@ const calendarBulkRoute    = createRoute({ getParentRoute: () => protectedRoute,
 const dataQualityRoute     = createRoute({ getParentRoute: () => protectedRoute, path: "/quality",             component: DataQualityPage });
 const shapeInspectorRoute  = createRoute({ getParentRoute: () => protectedRoute, path: "/quality/shapes",      component: ShapeInspectorPage });
 const duplicateStopsRoute  = createRoute({ getParentRoute: () => protectedRoute, path: "/stops/duplicates",    component: DuplicateDetectorPage });
+const modalLayerRoute      = createRoute({ getParentRoute: () => protectedRoute, path: "/network/modal",       component: MultiModalLayerPage });
+const agencyListRoute      = createRoute({ getParentRoute: () => protectedRoute, path: "/network/agencies",               component: AgenciesPage });
+const agencyDetailRoute    = createRoute({ getParentRoute: () => protectedRoute, path: "/network/agencies/$agencyId",    component: AgencyDetailPage });
+const agencyCompRoute      = createRoute({ getParentRoute: () => protectedRoute, path: "/network/agencies/comparison",  component: AgencyComparisonPage });
+const interopRoute         = createRoute({ getParentRoute: () => protectedRoute, path: "/network/interop",     component: InteropRegistryPage });
+const fareDesignerRoute    = createRoute({ getParentRoute: () => protectedRoute, path: "/fares",               component: FareManagerPage });
+
+// Fleet
+const vehiclesRoute     = createRoute({ getParentRoute: () => protectedRoute, path: "/fleet/vehicles", component: VehiclesPage });
+const driversRoute      = createRoute({ getParentRoute: () => protectedRoute, path: "/fleet/drivers",  component: DriversPage });
+
+// Ledger
+const ledgerRoute       = createRoute({ getParentRoute: () => protectedRoute, path: "/ledger",                    component: LedgerDashboardPage });
+const walletsListRoute  = createRoute({ getParentRoute: () => protectedRoute, path: "/ledger/wallets",            component: WalletsPage });
+const walletDetailRoute = createRoute({ getParentRoute: () => protectedRoute, path: "/ledger/wallets/$walletId",  component: WalletDetailPage });
+const splitConfigRoute  = createRoute({ getParentRoute: () => protectedRoute, path: "/ledger/split-config",       component: SplitConfigPage });
+
+// Real-Time Operations
+const liveMapRoute      = createRoute({ getParentRoute: () => protectedRoute, path: "/ops/live",        component: LiveVehicleMapPage });
+const perfRoute         = createRoute({ getParentRoute: () => protectedRoute, path: "/ops/performance", component: OnTimePerformancePage });
+const alertsRoute       = createRoute({ getParentRoute: () => protectedRoute, path: "/ops/alerts",      component: ServiceAlertsPage });
+const incidentsRoute    = createRoute({ getParentRoute: () => protectedRoute, path: "/ops/incidents",   component: IncidentLogPage });
+const playbackRoute     = createRoute({ getParentRoute: () => protectedRoute, path: "/ops/playback",    component: PositionPlaybackPage });
 
 const routeTree = rootRoute.addChildren([
   loginRoute,
@@ -138,6 +178,23 @@ const routeTree = rootRoute.addChildren([
     dataQualityRoute,
     shapeInspectorRoute,
     duplicateStopsRoute,
+    modalLayerRoute,
+    agencyListRoute,
+    agencyDetailRoute,
+    agencyCompRoute,
+    interopRoute,
+    fareDesignerRoute,
+    vehiclesRoute,
+    driversRoute,
+    ledgerRoute,
+    walletsListRoute,
+    walletDetailRoute,
+    splitConfigRoute,
+    liveMapRoute,
+    perfRoute,
+    alertsRoute,
+    incidentsRoute,
+    playbackRoute,
   ]),
 ]);
 

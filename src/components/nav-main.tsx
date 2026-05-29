@@ -30,7 +30,7 @@ export function NavMain({ sections }: { sections: { title: string; items: NavIte
               {section.items.map((item) => {
                 const active =
                   pathname === item.to ||
-                  (item.to !== "/" && pathname.startsWith(item.to));
+                  (item.to !== "/" && pathname.startsWith(item.to + "/"));
                 return (
                   <SidebarMenuItem key={item.to}>
                     <SidebarMenuButton
