@@ -5,6 +5,7 @@ import {
   RouteIcon, UsersIcon, BarChart2Icon, BellIcon, ZapIcon, CalendarClockIcon,
   CalendarDaysIcon, DatabaseIcon, NetworkIcon, MapIcon, TrendingUpIcon,
   Share2Icon, HistoryIcon, FlaskConicalIcon, GitBranchIcon,
+  TableIcon, ClockIcon, CalendarRangeIcon,
 } from "lucide-react";
 import { fetchOverview } from "@/api/dashboard";
 import { NavMain } from "@/components/nav-main";
@@ -54,6 +55,14 @@ const useSections = (pendingCount?: number) => [
       { title: "Snapshots",      to: "/network/snapshots",      icon: HistoryIcon },
       { title: "Scenarios",      to: "/network/scenarios",      icon: FlaskConicalIcon },
       { title: "Variants",       to: "/network/variants",       icon: GitBranchIcon },
+    ],
+  },
+  {
+    title: "Scheduling",
+    items: [
+      { title: "Timetable Editor",  to: "/timetable",   icon: TableIcon },
+      { title: "Scheduling Tools",  to: "/scheduling",  icon: ClockIcon },
+      { title: "Calendar Bulk",     to: "/calendars/bulk", icon: CalendarRangeIcon },
     ],
   },
   {

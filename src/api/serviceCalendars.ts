@@ -52,3 +52,17 @@ export async function removeCalendarException(
     `/v1/console/service-calendars/${serviceId}/exceptions/${exceptionId}`
   );
 }
+
+export async function bulkExceptions(
+  serviceId: string,
+  payload: {
+    add?: Array<{ date: string; exception_type: 1 | 2; note?: string }>;
+    remove?: number[];
+  }
+): Promise<{ added: number; removed: number }> {
+  const res = await apiService.post<{ added: number; removed: number }>(
+    `/v1/console/service-calendars/${serviceId}/exceptions/bulk`,
+    payload
+  );
+  return res.data;
+}

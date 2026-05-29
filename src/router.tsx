@@ -29,6 +29,9 @@ import NetworkSnapshotsPage from "@/pages/network/NetworkSnapshotsPage";
 import ScenariosPage from "@/pages/network/ScenariosPage";
 import ScenarioEditorPage from "@/pages/network/ScenarioEditorPage";
 import RouteVariantsPage from "@/pages/network/RouteVariantsPage";
+import TimetableEditorPage from "@/pages/timetable/TimetableEditorPage";
+import SchedulingPage from "@/pages/scheduling/SchedulingPage";
+import CalendarBulkEditorPage from "@/pages/calendars/CalendarBulkEditorPage";
 
 const rootRoute = createRootRoute({ component: Outlet });
 
@@ -85,6 +88,9 @@ const snapshotsRoute     = createRoute({ getParentRoute: () => protectedRoute, p
 const scenariosRoute     = createRoute({ getParentRoute: () => protectedRoute, path: "/network/scenarios",              component: ScenariosPage });
 const scenarioEditRoute  = createRoute({ getParentRoute: () => protectedRoute, path: "/network/scenarios/$id",          component: ScenarioEditorPage });
 const variantsRoute      = createRoute({ getParentRoute: () => protectedRoute, path: "/network/variants",               component: RouteVariantsPage });
+const timetableRoute     = createRoute({ getParentRoute: () => protectedRoute, path: "/timetable",                        component: TimetableEditorPage });
+const schedulingRoute    = createRoute({ getParentRoute: () => protectedRoute, path: "/scheduling",                       component: SchedulingPage });
+const calendarBulkRoute  = createRoute({ getParentRoute: () => protectedRoute, path: "/calendars/bulk",                   component: CalendarBulkEditorPage });
 
 const routeTree = rootRoute.addChildren([
   loginRoute,
@@ -120,6 +126,9 @@ const routeTree = rootRoute.addChildren([
     scenariosRoute,
     scenarioEditRoute,
     variantsRoute,
+    timetableRoute,
+    schedulingRoute,
+    calendarBulkRoute,
   ]),
 ]);
 

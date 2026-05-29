@@ -337,3 +337,93 @@ export interface WalkShedResult {
     properties: { time: number };
   }>;
 }
+
+// ── Scheduling & Timetables (Category 2) ─────────────────────────────────────
+
+export interface TimetableStop {
+  stop_id: string;
+  stop_name: string;
+  stop_sequence: number;
+}
+
+export interface TimetableTrip {
+  trip_id: string;
+  trip_headsign?: string | null;
+  direction_id: number;
+  service_id?: string | null;
+  scheduling_type?: "scheduled" | "frequency" | null;
+  stop_times_count: number;
+  times: Record<string, string>;
+}
+
+export interface TimetableData {
+  stops: TimetableStop[];
+  trips: TimetableTrip[];
+}
+
+export interface HeadwayWindow {
+  start: string;
+  end: string;
+  headway_mins: number;
+}
+
+export interface HeadwayOptimizerInput {
+  base_trip_id: string;
+  windows: HeadwayWindow[];
+  layover_mins: number;
+}
+
+export interface GeneratedTrip {
+  departure: string;
+  window_label: string;
+  headway_mins: number;
+}
+
+export interface OptimizeHeadwayResult {
+  fleet_size: number;
+  total_trips: number;
+  vehicle_hours: number;
+  one_way_mins: number;
+  cycle_mins: number;
+  generated_trips: GeneratedTrip[];
+}
+
+export interface LayoverTrip {
+  trip_id: string;
+  first_departure: string;
+  last_arrival: string;
+  duration_mins: number;
+  recovery_mins: number | null;
+  flagged: boolean;
+}
+
+export interface LayoverAnalysis {
+  trips: LayoverTrip[];
+  flagged_count: number;
+  min_recovery_mins: number | null;
+}
+
+export interface BlockConflict {
+  trip1_id: string;
+  trip2_id: string;
+  message: string;
+}
+
+export interface BlockTrip extends Pick<Trip, "trip_id" | "trip_headsign" | "direction_id" | "block_id"> {
+  first_departure: string;
+  last_arrival: string;
+  duration_mins: number;
+}
+
+export interface BlockEntry {
+  block_id: string;
+  trips: BlockTrip[];
+  total_hours: number;
+  conflicts: BlockConflict[];
+}
+
+export interface BlocksData {
+  blocks: BlockEntry[];
+  unblocked: BlockTrip[];
+  total_fleet_size: number;
+}
