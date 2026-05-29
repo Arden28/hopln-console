@@ -32,6 +32,9 @@ import RouteVariantsPage from "@/pages/network/RouteVariantsPage";
 import TimetableEditorPage from "@/pages/timetable/TimetableEditorPage";
 import SchedulingPage from "@/pages/scheduling/SchedulingPage";
 import CalendarBulkEditorPage from "@/pages/calendars/CalendarBulkEditorPage";
+import DataQualityPage from "@/pages/quality/DataQualityPage";
+import ShapeInspectorPage from "@/pages/quality/ShapeInspectorPage";
+import DuplicateDetectorPage from "@/pages/stops/DuplicateDetectorPage";
 
 const rootRoute = createRootRoute({ component: Outlet });
 
@@ -88,9 +91,12 @@ const snapshotsRoute     = createRoute({ getParentRoute: () => protectedRoute, p
 const scenariosRoute     = createRoute({ getParentRoute: () => protectedRoute, path: "/network/scenarios",              component: ScenariosPage });
 const scenarioEditRoute  = createRoute({ getParentRoute: () => protectedRoute, path: "/network/scenarios/$id",          component: ScenarioEditorPage });
 const variantsRoute      = createRoute({ getParentRoute: () => protectedRoute, path: "/network/variants",               component: RouteVariantsPage });
-const timetableRoute     = createRoute({ getParentRoute: () => protectedRoute, path: "/timetable",                        component: TimetableEditorPage });
-const schedulingRoute    = createRoute({ getParentRoute: () => protectedRoute, path: "/scheduling",                       component: SchedulingPage });
-const calendarBulkRoute  = createRoute({ getParentRoute: () => protectedRoute, path: "/calendars/bulk",                   component: CalendarBulkEditorPage });
+const timetableRoute       = createRoute({ getParentRoute: () => protectedRoute, path: "/timetable",          component: TimetableEditorPage });
+const schedulingRoute      = createRoute({ getParentRoute: () => protectedRoute, path: "/scheduling",          component: SchedulingPage });
+const calendarBulkRoute    = createRoute({ getParentRoute: () => protectedRoute, path: "/calendars/bulk",      component: CalendarBulkEditorPage });
+const dataQualityRoute     = createRoute({ getParentRoute: () => protectedRoute, path: "/quality",             component: DataQualityPage });
+const shapeInspectorRoute  = createRoute({ getParentRoute: () => protectedRoute, path: "/quality/shapes",      component: ShapeInspectorPage });
+const duplicateStopsRoute  = createRoute({ getParentRoute: () => protectedRoute, path: "/stops/duplicates",    component: DuplicateDetectorPage });
 
 const routeTree = rootRoute.addChildren([
   loginRoute,
@@ -129,6 +135,9 @@ const routeTree = rootRoute.addChildren([
     timetableRoute,
     schedulingRoute,
     calendarBulkRoute,
+    dataQualityRoute,
+    shapeInspectorRoute,
+    duplicateStopsRoute,
   ]),
 ]);
 

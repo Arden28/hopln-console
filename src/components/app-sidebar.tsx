@@ -6,6 +6,7 @@ import {
   CalendarDaysIcon, DatabaseIcon, NetworkIcon, MapIcon, TrendingUpIcon,
   Share2Icon, HistoryIcon, FlaskConicalIcon, GitBranchIcon,
   TableIcon, ClockIcon, CalendarRangeIcon,
+  ShieldCheckIcon, ScanSearchIcon, RouteOffIcon,
 } from "lucide-react";
 import { fetchOverview } from "@/api/dashboard";
 import { NavMain } from "@/components/nav-main";
@@ -68,7 +69,10 @@ const useSections = (pendingCount?: number) => [
   {
     title: "Operations",
     items: [
-      { title: "GTFS", to: "/gtfs", icon: DatabaseIcon },
+      { title: "GTFS",             to: "/gtfs",             icon: DatabaseIcon },
+      { title: "Data Quality",     to: "/quality",          icon: ShieldCheckIcon },
+      { title: "Shape Inspector",  to: "/quality/shapes",   icon: RouteOffIcon },
+      { title: "Duplicate Stops",  to: "/stops/duplicates", icon: ScanSearchIcon },
     ],
   },
   {

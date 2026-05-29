@@ -1,43 +1,57 @@
+<div align="center">
+
 # Hopln Console
 
-Internal administration dashboard for the Hopln transit platform — Nairobi's matatu and bus network navigation system. Provides role-restricted access for moderators and administrators to manage stops, routes, contributions, users, analytics, notifications, and system health.
+**Internal administration dashboard for the Hopln transit platform.**
+
+React 19 · TypeScript · TanStack Router · TanStack Query · Mapbox GL
+
+---
+
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Mapbox](https://img.shields.io/badge/Mapbox_GL-3-000000?style=flat-square&logo=mapbox&logoColor=white)](https://mapbox.com)
+
+</div>
 
 ---
 
 ## Table of Contents
 
-- [What is Hopln Console](#what-is-hopln-console)
+- [Overview](#overview)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Setup](#setup)
 - [Environment Variables](#environment-variables)
 - [Dev Commands](#dev-commands)
 - [Router](#router)
+- [Sidebar Sections](#sidebar-sections)
 - [API Modules](#api-modules)
 - [TypeScript Types](#typescript-types)
 - [Store](#store)
 - [Lib Utilities](#lib-utilities)
 - [UI Components](#ui-components)
 - [Packages](#packages)
+- [Notes](#notes)
 
 ---
 
-## What is Hopln Console
+## Overview
 
-Hopln Console is the back-office SPA for the Hopln system. It is accessible only to users with one of three elevated roles: `moderator`, `admin`, or `superadmin`. Regular passenger accounts are blocked at the login screen.
+Hopln Console is the back-office SPA for the Hopln system. Only users with role `moderator`, `admin`, or `superadmin` can access it — regular passenger accounts are blocked at the login screen.
 
-Core responsibilities of the console:
+The console is organised into six capability areas:
 
-| Section | Purpose |
-|---------|---------|
-| Dashboard | Real-time KPIs (DAU, MAU, journeys today), activity feed, and system health status |
-| Contributions | Review, approve, or decline community-submitted stop edits, new stop reports, photos, and route observations |
-| Stops | Browse, create, and edit the GTFS stop database with inline Mapbox map editing |
-| Routes | Browse and edit bus route metadata (name, color, type) |
-| Users | Search users, inspect activity, adjust gamification points, award or revoke badges, and ban/unban accounts |
-| Analytics | Journey volume charts, top destination searches, contribution trends, and user growth curves |
-| Notifications | Compose and broadcast push notifications to segments of the user base |
-| Settings | Manage system configuration, team roles, OTP routing engine status, and the badge catalog |
+| Area | Sections | Purpose |
+|------|----------|---------|
+| **Data** | Contributions, Stops, Routes, Trips, Calendars | Manage the full GTFS dataset |
+| **People** | Users | Search, inspect, ban/unban, award badges, adjust points |
+| **Network** | Graph, Coverage, Desire Lines, Corridors, Transfer Graph, Snapshots, Scenarios, Variants | Visualise and plan the transit network |
+| **Scheduling** | Timetable Editor, Scheduling Tools, Calendar Bulk | Build and edit service patterns and headways |
+| **Operations** | GTFS, Data Quality, Shape Inspector, Duplicate Stops | Export, validate, and audit GTFS data |
+| **Reach** | Analytics, Notifications | Measure usage and send broadcasts |
 
 The console talks exclusively to the `hopln-api` Laravel backend. It has no direct database access.
 
@@ -51,7 +65,7 @@ The console talks exclusively to the `hopln-api` Laravel backend. It has no dire
 | Language | TypeScript 6 |
 | Build tool | Vite 8 with `@tailwindcss/vite` plugin |
 | Styling | Tailwind CSS v4 (CSS-first config, `@theme inline`) |
-| UI components | shadcn/ui — New York style, Zinc base, manually installed |
+| UI components | shadcn/ui — New York style, Zinc base |
 | Routing | TanStack Router v1 (code-based route tree) |
 | Server state | TanStack Query v5 |
 | Client state | Zustand v5 with `persist` middleware |
@@ -69,41 +83,60 @@ The console talks exclusively to the `hopln-api` Laravel backend. It has no dire
 
 ```
 src/
-├── api/              # API modules (one file per domain)
-│   ├── client.ts     # Axios instance with auth interceptors
-│   ├── auth.ts       # Login / logout
-│   ├── dashboard.ts  # Overview, activity, system health
-│   ├── users.ts      # User CRUD + ban, points, badges
-│   ├── contributions.ts  # Contribution review workflow
-│   ├── stops.ts      # Stop CRUD
-│   ├── analytics.ts  # Charts and KPI data
-│   └── otp.ts        # OTP routing engine status + sync
+├── api/
+│   ├── client.ts           # Axios instance — Bearer token + 401 interceptor
+│   ├── auth.ts             # login / logout
+│   ├── dashboard.ts        # KPIs, activity feed, system health
+│   ├── users.ts            # User CRUD, ban, points, badges
+│   ├── contributions.ts    # Contribution review workflow
+│   ├── stops.ts            # Stop CRUD
+│   ├── routes.ts           # Route CRUD
+│   ├── trips.ts            # Trip + stop-time CRUD
+│   ├── calendars.ts        # Service calendars + exceptions
+│   ├── analytics.ts        # Chart data and KPIs
+│   ├── otp.ts              # OTP routing engine status + sync
+│   ├── network.ts          # Graph, coverage, desire lines, corridors, snapshots, scenarios, variants
+│   ├── timetable.ts        # Timetable data + headway optimizer
+│   ├── scheduling.ts       # Block builder, layover planner, time-space diagram
+│   └── quality.ts          # Quality score, shape inspector, duplicate stops, snap, export-as
 ├── components/
-│   ├── layout/       # AppShell, Sidebar, Topbar
-│   ├── ui/           # shadcn/ui components
-│   └── shared/       # Reusable cross-page components
+│   ├── app-sidebar.tsx     # Navigation sidebar with section groups
+│   ├── nav-main.tsx        # Collapsible section nav items
+│   ├── nav-secondary.tsx   # Bottom secondary links
+│   ├── nav-user.tsx        # User dropdown in sidebar footer
+│   └── ui/                 # shadcn/ui components (30+)
 ├── hooks/
-│   └── use-mobile.ts # Responsive breakpoint hook (768px)
+│   └── use-mobile.ts       # Responsive breakpoint hook (768 px)
 ├── lib/
-│   ├── utils.ts      # cn, formatDate, formatDateTime, timeAgo, formatNumber
-│   └── queryClient.ts
+│   ├── utils.ts            # cn, formatDate, formatDateTime, timeAgo, formatNumber
+│   └── queryClient.ts      # TanStack Query client (staleTime 30s)
 ├── pages/
-│   ├── auth/         # LoginPage
-│   ├── dashboard/    # DashboardPage
-│   ├── contributions/# ContributionsPage, ContributionDetailPage
-│   ├── users/        # UsersPage, UserDetailPage
-│   ├── stops/        # StopsPage, StopEditorPage
-│   ├── routes/       # RoutesPage, RouteEditorPage
-│   ├── analytics/    # AnalyticsPage
-│   ├── notifications/# NotificationsPage
-│   └── settings/     # SettingsPage
-├── router.tsx        # Full TanStack Router route tree
+│   ├── auth/               # LoginPage
+│   ├── dashboard/          # DashboardPage
+│   ├── contributions/      # ContributionsPage, ContributionDetailPage
+│   ├── users/              # UsersPage, UserDetailPage
+│   ├── stops/              # StopsPage, StopEditorPage, DuplicateDetectorPage
+│   ├── routes/             # RoutesPage, RouteEditorPage
+│   ├── trips/              # TripsPage, TripEditorPage
+│   ├── calendars/          # ServiceCalendarsPage, ServiceCalendarEditorPage, CalendarBulkEditorPage
+│   ├── analytics/          # AnalyticsPage
+│   ├── notifications/      # NotificationsPage
+│   ├── settings/           # SettingsPage
+│   ├── gtfs/               # GtfsPage (export, validate, official validator)
+│   ├── network/            # NetworkHubPage, NetworkGraphPage, NetworkCoveragePage,
+│   │                       #   DesireLinesPage, CorridorDesignerPage, TransferGraphPage,
+│   │                       #   NetworkSnapshotsPage, ScenariosPage, ScenarioEditorPage,
+│   │                       #   RouteVariantsPage
+│   ├── timetable/          # TimetableEditorPage
+│   ├── scheduling/         # SchedulingPage (block builder, layover planner, time-space diagram)
+│   └── quality/            # DataQualityPage, ShapeInspectorPage
+├── router.tsx              # Full TanStack Router route tree
 ├── store/
-│   └── authStore.ts  # Zustand auth store (persisted)
+│   └── authStore.ts        # Zustand auth store (persisted)
 ├── types/
-│   └── index.ts      # All shared TypeScript interfaces
-├── index.css         # Tailwind v4 theme + CSS custom properties
-└── main.tsx          # React root + QueryClientProvider + RouterProvider
+│   └── index.ts            # All shared TypeScript interfaces
+├── index.css               # Tailwind v4 theme + CSS custom properties
+└── main.tsx                # React root + QueryClientProvider + RouterProvider
 ```
 
 ---
@@ -111,11 +144,11 @@ src/
 ## Setup
 
 ```bash
-cd d:\React\console
+cd console
 npm install
 ```
 
-Copy `.env.example` to `.env` and set `VITE_API_URL` (see below).
+Copy `.env.example` to `.env` and fill in the two required variables (see below).
 
 ---
 
@@ -123,18 +156,16 @@ Copy `.env.example` to `.env` and set `VITE_API_URL` (see below).
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `VITE_API_URL` | Yes | Base URL of the `hopln-api` Laravel backend, e.g. `http://localhost:8000/api` |
-| `VITE_MAPBOX_TOKEN` | Yes | Mapbox public token — used for map tiles and geocoding in stop/contribution editors |
+| `VITE_API_URL` | Yes | Base URL of the `hopln-api` backend, e.g. `http://localhost:8000/api` |
+| `VITE_MAPBOX_TOKEN` | Yes | Mapbox public token — map tiles + geocoding in stop / shape editors |
 
-When `VITE_API_URL` is not set, the Axios client defaults to `/api` and relies on the Vite dev server proxy (`/api → http://localhost:8000`).
+When `VITE_API_URL` is not set the Axios client defaults to `/api` and relies on the Vite dev-server proxy (`/api → http://localhost:8000`).
 
-**Vite proxy config** (`vite.config.ts`):
+**Vite proxy** (`vite.config.ts`):
 ```ts
 server: {
   port: 5173,
-  proxy: {
-    "/api": { target: "http://localhost:8000", changeOrigin: true },
-  },
+  proxy: { "/api": { target: "http://localhost:8000", changeOrigin: true } },
 }
 ```
 
@@ -143,59 +174,110 @@ server: {
 ## Dev Commands
 
 ```bash
-npm run dev        # Start Vite dev server on http://localhost:5173
+npm run dev        # Vite dev server → http://localhost:5173
 npm run build      # TypeScript compile + Vite production build → dist/
 npm run preview    # Serve the production build locally
 npm run lint       # ESLint
-npx tsc --noEmit   # Type-check without emitting files
+npx tsc --noEmit   # Type-check without emitting
 ```
 
 ---
 
 ## Router
 
-Built with **TanStack Router v1** (code-based, not file-based). The full route tree is defined in `src/router.tsx`.
+Built with **TanStack Router v1** (code-based, not file-based). The full route tree lives in `src/router.tsx`.
 
 ### Route Tree
 
 ```
 rootRoute  (Outlet)
-├── /login                    loginRoute         — public; redirects to / if already authenticated
-└── [protected]               protectedRoute     — auth guard: redirects to /login if unauthenticated
-                                                    or if user.role is not moderator/admin/superadmin
-    ├── /                     dashboardRoute     — DashboardPage
-    ├── /users                usersRoute         — UsersPage (paginated user list)
-    ├── /users/$id            userDetailRoute    — UserDetailPage (profile, contributions, badges)
-    ├── /contributions        contributionsRoute — ContributionsPage (filterable list)
-    ├── /contributions/$id    contributionDetail — ContributionDetailPage (map + approve/decline)
-    ├── /stops                stopsRoute         — StopsPage (searchable table)
-    ├── /stops/new            stopNewRoute       — StopEditorPage (create mode)
-    ├── /stops/$id/edit       stopEditRoute      — StopEditorPage (edit mode)
-    ├── /routes               routesRoute        — RoutesPage (table)
-    ├── /routes/new           routeNewRoute      — RouteEditorPage (create mode)
-    ├── /routes/$id/edit      routeEditRoute     — RouteEditorPage (edit mode)
-    ├── /analytics            analyticsRoute     — AnalyticsPage (charts)
-    ├── /notifications        notificationsRoute — NotificationsPage (compose + history)
-    └── /settings             settingsRoute      — SettingsPage (multi-tab config)
+├── /login                         loginRoute               — public; redirects to / if authenticated
+└── [protected]                    protectedRoute           — redirects to /login if unauthenticated
+                                                              or role ∉ {moderator,admin,superadmin}
+    ├── /                          dashboardRoute           — DashboardPage
+    │
+    ├── /users                     usersRoute               — UsersPage
+    ├── /users/$id                 userDetailRoute          — UserDetailPage
+    │
+    ├── /contributions             contributionsRoute       — ContributionsPage
+    ├── /contributions/$id         contributionDetail       — ContributionDetailPage
+    │
+    ├── /stops                     stopsRoute               — StopsPage
+    ├── /stops/new                 stopNewRoute             — StopEditorPage (create)
+    ├── /stops/$id/edit            stopEditRoute            — StopEditorPage (edit)
+    ├── /stops/duplicates          duplicateStopsRoute      — DuplicateDetectorPage
+    │
+    ├── /routes                    routesRoute              — RoutesPage
+    ├── /routes/new                routeNewRoute            — RouteEditorPage (create)
+    ├── /routes/$id/edit           routeEditRoute           — RouteEditorPage (edit)
+    │
+    ├── /trips                     tripsRoute               — TripsPage
+    ├── /trips/new                 tripNewRoute             — TripEditorPage (create)
+    ├── /trips/$id/edit            tripEditRoute            — TripEditorPage (edit)
+    │
+    ├── /calendars                 calendarsRoute           — ServiceCalendarsPage
+    ├── /calendars/new             calendarNewRoute         — ServiceCalendarEditorPage (create)
+    ├── /calendars/$id/edit        calendarEditRoute        — ServiceCalendarEditorPage (edit)
+    ├── /calendars/bulk            calendarBulkRoute        — CalendarBulkEditorPage
+    │
+    ├── /analytics                 analyticsRoute           — AnalyticsPage
+    ├── /notifications             notificationsRoute       — NotificationsPage
+    ├── /settings                  settingsRoute            — SettingsPage
+    │
+    ├── /gtfs                      gtfsRoute                — GtfsPage (export + validator)
+    │
+    ├── /network                   networkHubRoute          — NetworkHubPage
+    ├── /network/graph             networkGraphRoute        — NetworkGraphPage
+    ├── /network/coverage          networkCoverRoute        — NetworkCoveragePage
+    ├── /network/desire-lines      desireLinesRoute         — DesireLinesPage
+    ├── /network/corridors         corridorsRoute           — CorridorDesignerPage
+    ├── /network/transfer-graph    transferGraphRoute       — TransferGraphPage
+    ├── /network/snapshots         snapshotsRoute           — NetworkSnapshotsPage
+    ├── /network/scenarios         scenariosRoute           — ScenariosPage
+    ├── /network/scenarios/$id     scenarioEditRoute        — ScenarioEditorPage
+    ├── /network/variants          variantsRoute            — RouteVariantsPage
+    │
+    ├── /timetable                 timetableRoute           — TimetableEditorPage
+    ├── /scheduling                schedulingRoute          — SchedulingPage
+    │
+    ├── /quality                   dataQualityRoute         — DataQualityPage
+    └── /quality/shapes            shapeInspectorRoute      — ShapeInspectorPage
 ```
 
 ### Auth Guard Logic
 
-`protectedRoute.beforeLoad` reads `useAuthStore.getState()` synchronously (Zustand's static `.getState()` — no hook needed outside React). If either condition fails it throws `redirect({ to: "/login" })`:
+`protectedRoute.beforeLoad` reads `useAuthStore.getState()` synchronously (Zustand static `.getState()` — safe outside React). Two conditions each throw `redirect({ to: "/login" })`:
 
-1. `!isAuthenticated` — no token / session expired
-2. `user.role` not in `["moderator", "admin", "superadmin"]` — passenger account tried to access console
+1. `!isAuthenticated` — no token or session expired
+2. `user.role` not in `["moderator", "admin", "superadmin"]`
 
-`loginRoute.beforeLoad` performs the inverse redirect — if already authenticated, it sends you straight to `/`.
+`loginRoute.beforeLoad` performs the inverse: already authenticated → redirect to `/`.
 
 ### `useParams` Pattern
 
-Pages that read dynamic segments (`$id`) use `strict: false` to avoid the `Invariant failed` error that occurs during navigation transitions:
+Pages reading `$id` segments use `strict: false` to avoid the `Invariant failed` error during navigation transitions:
 
 ```ts
 const params = useParams({ strict: false }) as { id?: string };
-const id = params.id!;
 ```
+
+---
+
+## Sidebar Sections
+
+The sidebar (`src/components/app-sidebar.tsx`) groups navigation into sections. Each item maps to a route above.
+
+| Section | Items |
+|---------|-------|
+| **Overview** | Dashboard |
+| **Data** | Contributions *(with pending badge)*, Stops, Routes, Trips, Calendars |
+| **People** | Users |
+| **Network** | Graph View, Coverage, Desire Lines, Corridors, Transfer Graph, Snapshots, Scenarios, Variants |
+| **Scheduling** | Timetable Editor, Scheduling Tools, Calendar Bulk |
+| **Operations** | GTFS, Data Quality, Shape Inspector, Duplicate Stops |
+| **Reach** | Analytics, Notifications |
+
+The pending contributions badge on the Contributions item is driven by `GET /v1/console/dashboard` polled every 30 seconds.
 
 ---
 
@@ -203,7 +285,7 @@ const id = params.id!;
 
 All modules import from `./client` (the shared Axios instance). Responses are typed against interfaces in `src/types/index.ts`.
 
-### `api/client.ts` — Axios instance
+### `api/client.ts`
 
 ```ts
 const client = axios.create({
@@ -212,258 +294,193 @@ const client = axios.create({
 });
 ```
 
-**Request interceptor**: reads the Bearer token from `localStorage["hopln_console_token"]` and attaches it as `Authorization: Bearer <token>` on every outgoing request.
+**Request interceptor**: reads Bearer token from `localStorage["hopln_console_token"]`.
 
-**Response interceptor**: on HTTP 401, clears both `hopln_console_token` and `hopln_console_user` from localStorage and hard-navigates to `/login` via `window.location.href`.
+**Response interceptor**: on 401, clears localStorage and navigates to `/login`.
 
 ---
 
 ### `api/auth.ts`
 
-| Function | Method | Endpoint | Description |
-|----------|--------|----------|-------------|
-| `login(email, password)` | POST | `/v1/auth/login` | Authenticate; returns `{ token, user }` |
-| `logout()` | POST | `/v1/auth/logout` | Invalidate session token server-side |
-
-```ts
-interface LoginResponse {
-  token: string;
-  user: ConsoleUser;
-}
-```
-
-After a successful login, `LoginPage` calls `useAuthStore.setAuth(user, token)` to persist the session.
+| Function | Method | Endpoint |
+|----------|--------|----------|
+| `login(email, password)` | POST | `/v1/auth/login` |
+| `logout()` | POST | `/v1/auth/logout` |
 
 ---
 
 ### `api/dashboard.ts`
 
-| Function | Method | Endpoint | Description |
-|----------|--------|----------|-------------|
-| `fetchOverview()` | GET | `/v1/console/dashboard` | Returns `DashboardOverview` KPIs |
-| `fetchActivity()` | GET | `/v1/console/activity` | Returns paginated recent-events array |
-| `fetchSystemHealth()` | GET | `/v1/console/system-health` | Returns `SystemHealth` (OTP + queue status) |
+| Function | Method | Endpoint |
+|----------|--------|----------|
+| `fetchOverview()` | GET | `/v1/console/dashboard` |
+| `fetchActivity()` | GET | `/v1/console/activity` |
+| `fetchSystemHealth()` | GET | `/v1/console/system-health` |
 
 ---
 
 ### `api/users.ts`
 
-| Function | Method | Endpoint | Description |
-|----------|--------|----------|-------------|
-| `fetchUsers(filters)` | GET | `/v1/console/users` | Paginated user list with optional filters |
-| `fetchUser(id)` | GET | `/v1/console/users/:id` | Single user with counts |
-| `updateUser(id, data)` | PATCH | `/v1/console/users/:id` | Update user fields |
-| `banUser(id, reason)` | POST | `/v1/console/users/:id/ban` | Ban a user with a reason string |
-| `unbanUser(id)` | POST | `/v1/console/users/:id/unban` | Lift a ban |
-| `adjustPoints(id, points, reason)` | PATCH | `/v1/console/users/:id/points` | Add or subtract gamification points |
-| `awardBadge(userId, badgeId)` | POST | `/v1/console/users/:userId/badges` | Grant a badge |
-| `revokeBadge(userId, badgeId)` | DELETE | `/v1/console/users/:userId/badges/:badgeId` | Remove a badge |
-
-```ts
-interface UserFilters {
-  search?: string;
-  role?: string;        // "user" | "moderator" | "admin" | "superadmin"
-  banned?: "true" | "false";
-  page?: number;
-  per_page?: number;
-}
-```
+| Function | Method | Endpoint |
+|----------|--------|----------|
+| `fetchUsers(filters)` | GET | `/v1/console/users` |
+| `fetchUser(id)` | GET | `/v1/console/users/:id` |
+| `updateUser(id, data)` | PATCH | `/v1/console/users/:id` |
+| `banUser(id, reason)` | POST | `/v1/console/users/:id/ban` |
+| `unbanUser(id)` | POST | `/v1/console/users/:id/unban` |
+| `adjustPoints(id, points, reason)` | PATCH | `/v1/console/users/:id/points` |
+| `awardBadge(userId, badgeId)` | POST | `/v1/console/users/:userId/badges` |
+| `revokeBadge(userId, badgeId)` | DELETE | `/v1/console/users/:userId/badges/:badgeId` |
 
 ---
 
 ### `api/contributions.ts`
 
-| Function | Method | Endpoint | Description |
-|----------|--------|----------|-------------|
-| `fetchContributions(filters)` | GET | `/v1/console/contributions` | Paginated contributions with filters |
-| `fetchContribution(id)` | GET | `/v1/console/contributions/:id` | Single contribution with nested user |
-| `approveContribution(id)` | POST | `/v1/console/contributions/:id/approve` | Mark as approved |
-| `declineContribution(id, reason)` | POST | `/v1/console/contributions/:id/decline` | Mark as declined with reason |
-| `updateContribution(id, data)` | PATCH | `/v1/console/contributions/:id` | Edit contribution fields |
-| `bulkApprove(ids)` | POST | `/v1/console/contributions/bulk-approve` | Approve multiple at once |
-| `bulkDecline(ids, reason)` | POST | `/v1/console/contributions/bulk-decline` | Decline multiple with shared reason |
-
-```ts
-interface ContributionFilters {
-  status?: ContributionStatus;  // "pending" | "approved" | "declined"
-  type?: string;
-  search?: string;
-  from?: string;  // ISO date string
-  to?: string;    // ISO date string
-  page?: number;
-  per_page?: number;
-}
-```
+| Function | Method | Endpoint |
+|----------|--------|----------|
+| `fetchContributions(filters)` | GET | `/v1/console/contributions` |
+| `fetchContribution(id)` | GET | `/v1/console/contributions/:id` |
+| `approveContribution(id)` | POST | `/v1/console/contributions/:id/approve` |
+| `declineContribution(id, reason)` | POST | `/v1/console/contributions/:id/decline` |
+| `bulkApprove(ids)` | POST | `/v1/console/contributions/bulk-approve` |
+| `bulkDecline(ids, reason)` | POST | `/v1/console/contributions/bulk-decline` |
 
 ---
 
 ### `api/stops.ts`
 
-| Function | Method | Endpoint | Description |
-|----------|--------|----------|-------------|
-| `fetchStops(params)` | GET | `/v1/console/stops` | Paginated stop list |
-| `fetchStop(id)` | GET | `/v1/console/stops/:id` | Single stop by string ID |
-| `createStop(data)` | POST | `/v1/console/stops` | Create a new stop |
-| `updateStop(id, data)` | PATCH | `/v1/console/stops/:id` | Update stop fields |
-| `deleteStop(id)` | DELETE | `/v1/console/stops/:id` | Delete a stop |
+| Function | Method | Endpoint |
+|----------|--------|----------|
+| `fetchStops(params)` | GET | `/v1/console/stops` |
+| `fetchStop(id)` | GET | `/v1/console/stops/:id` |
+| `createStop(data)` | POST | `/v1/console/stops` |
+| `updateStop(id, data)` | PATCH | `/v1/console/stops/:id` |
+| `deleteStop(id)` | DELETE | `/v1/console/stops/:id` |
 
-The `id` parameter for stops is a string (`stop_id` in GTFS format, e.g. `"STB_001"`), not a numeric primary key.
+Stop IDs are GTFS strings (e.g. `"STB_001"`), not numeric primary keys.
 
 ---
 
 ### `api/analytics.ts`
 
-| Function | Method | Endpoint | Description |
-|----------|--------|----------|-------------|
-| `fetchAnalyticsOverview()` | GET | `/v1/console/analytics/overview` | Aggregate KPIs |
-| `fetchJourneyAnalytics(days?)` | GET | `/v1/console/analytics/journeys` | Daily journey count series (default 30 days) |
-| `fetchTopSearches()` | GET | `/v1/console/analytics/searches` | Most searched stop/place names |
-| `fetchContributionAnalytics(days?)` | GET | `/v1/console/analytics/contributions` | Contribution volume series (default 60 days) |
-| `fetchUserGrowth(days?)` | GET | `/v1/console/analytics/user-growth` | Cumulative user registration curve (default 90 days) |
-
-**Important**: the API returns Laravel paginated shapes `{ data: [...], total: N, ... }` for list endpoints. `AnalyticsPage` normalises these with:
-```ts
-const toArray = <T,>(r: { data: unknown }) =>
-  Array.isArray(r.data) ? r.data as T[] : ((r.data as { data?: T[] })?.data ?? []);
-```
+| Function | Method | Endpoint |
+|----------|--------|----------|
+| `fetchAnalyticsOverview()` | GET | `/v1/console/analytics/overview` |
+| `fetchJourneyAnalytics(days?)` | GET | `/v1/console/analytics/journeys` |
+| `fetchTopSearches()` | GET | `/v1/console/analytics/searches` |
+| `fetchContributionAnalytics(days?)` | GET | `/v1/console/analytics/contributions` |
+| `fetchUserGrowth(days?)` | GET | `/v1/console/analytics/user-growth` |
 
 ---
 
 ### `api/otp.ts`
 
-| Function | Method | Endpoint | Description |
-|----------|--------|----------|-------------|
-| `fetchOtpStatus()` | GET | `/v1/console/otp/status` | Returns `OtpStatus` (ok/running/failed/unknown) |
-| `triggerOtpSync()` | POST | `/v1/console/otp/sync` | Kick off a GTFS re-import on the routing engine |
+| Function | Method | Endpoint |
+|----------|--------|----------|
+| `fetchOtpStatus()` | GET | `/v1/console/otp/status` |
+| `triggerOtpSync()` | POST | `/v1/console/otp/sync` |
+
+---
+
+### `api/timetable.ts`
+
+| Function | Method | Endpoint |
+|----------|--------|----------|
+| `fetchTimetableData(routeId?)` | GET | `/v1/console/timetable` |
+| `fetchHeadwayReport(routeId)` | GET | `/v1/console/timetable/headway-report` |
+| `optimizeHeadways(routeId, opts)` | POST | `/v1/console/timetable/optimize-headways` |
+
+---
+
+### `api/scheduling.ts`
+
+| Function | Method | Endpoint |
+|----------|--------|----------|
+| `fetchBlocks(filters?)` | GET | `/v1/console/scheduling/blocks` |
+| `fetchBlock(id)` | GET | `/v1/console/scheduling/blocks/:id` |
+| `saveBlock(data)` | POST | `/v1/console/scheduling/blocks` |
+| `deleteBlock(id)` | DELETE | `/v1/console/scheduling/blocks/:id` |
+| `fetchLayoverReport(filters?)` | GET | `/v1/console/scheduling/layover-report` |
+| `fetchTimeSpaceDiagram(routeId, date)` | GET | `/v1/console/scheduling/time-space-diagram` |
+
+---
+
+### `api/quality.ts`
+
+| Function | Method | Endpoint |
+|----------|--------|----------|
+| `fetchQualityScore(refresh?)` | GET | `/v1/console/quality/score` |
+| `fetchDrillDown(metric)` | GET | `/v1/console/quality/drill-down?metric=X` |
+| `fetchShapeInspector(tripId)` | GET | `/v1/console/quality/shape-inspector?trip_id=X` |
+| `fetchDuplicateStops(radiusM?)` | GET | `/v1/console/quality/duplicate-stops?radius=N` |
+| `mergeStops(canonicalId, dupId)` | POST | `/v1/console/quality/merge-stops` |
+| `snapStop(stopId)` | POST | `/v1/console/stops/:id/snap` |
+| `fetchOfficialValidation()` | GET | `/v1/console/gtfs/official-validate` |
+| `exportAs(format)` | POST | `/v1/console/gtfs/export-as` → blob download |
+
+`exportAs` uses `responseType: "blob"` and triggers a browser download via `URL.createObjectURL`.
 
 ---
 
 ## TypeScript Types
 
-All types are in `src/types/index.ts` and mirror the shapes returned by `hopln-api`.
+All types are in `src/types/index.ts`.
+
+### Core
 
 ```ts
 type Role = "user" | "moderator" | "admin" | "superadmin";
 
-interface ConsoleUser {
-  id: number;
-  name: string;
-  email: string;
-  phone_number: string | null;
-  avatar: string | null;
-  role: Role;
-  points: number;
-  banned_at: string | null;
-  ban_reason: string | null;
-  created_at: string;
-  updated_at: string;
-  contributions_count?: number;
-  saved_places_count?: number;
-  saved_journeys_count?: number;
+interface ConsoleUser { id, name, email, phone_number, avatar, role, points, banned_at, ban_reason, created_at, updated_at }
+interface Contribution { id, user_id, user?, type: ContributionType, status: ContributionStatus, lat, lng, stop_name, ... }
+interface Stop { id, stop_id, stop_name, stop_lat, stop_lon, stop_code, stop_desc, wheelchair_accessible, has_shelter }
+interface Route { route_id, route_short_name, route_long_name, route_type, route_color }
+interface Trip { trip_id, route_id, service_id, trip_headsign, direction_id, shape_id, scheduling_type }
+interface ServiceCalendar { id, service_id, monday..sunday, start_date, end_date }
+interface PaginatedResponse<T> { data: T[], current_page, last_page, per_page, total }
+```
+
+### Scheduling & Timetable (Category 2)
+
+```ts
+interface HeadwaySlot { period_label, start_time, end_time, trips: TripSlot[], avg_headway_min, target_headway_min }
+interface TimetableData { route_id, patterns: PatternTimetable[] }
+interface Block { id, block_id, route_id, trips: BlockTrip[], total_duration_min, deadhead_min }
+interface LayoverReport { terminal, trips: LayoverTrip[], avg_layover_min, min_layover_min }
+interface TimeSpaceDiagram { stops: string[], trips: TimeSpaceTrip[] }
+interface BlocksData { blocks: Block[], total_vehicles_required, total_deadhead_min }
+```
+
+### Data Quality (Category 4)
+
+```ts
+interface QualityMetric { key, label, value, total, score, inverse: boolean }
+interface DataQualityScore { overall: number, computed_at: string, metrics: QualityMetric[] }
+
+interface StopGap { stop_id, stop_name, lat, lng, gap_m: number, flagged: boolean }
+interface ShapeSegment { from_idx, to_idx, distance_m }
+interface ShapeReversal { point_idx, bearing_change_deg }
+interface ShapeInspectorResult {
+  trip_id, shape_id,
+  stop_gaps: StopGap[], teleports: ShapeSegment[], reversals: ShapeReversal[],
+  max_gap_m, flagged_stops_count
 }
 
-type ContributionStatus = "pending" | "approved" | "declined";
-type ContributionType = "new_stop" | "stop_edit" | "route_observation" | "photo" | "review";
-
-interface Contribution {
-  id: number;
-  user_id: number;
-  user?: Pick<ConsoleUser, "id" | "name" | "avatar" | "points">;
-  type: ContributionType;
-  status: ContributionStatus;
-  description: string;
-  lat: number | null;
-  lng: number | null;
-  stop_name: string | null;
-  before_lat: number | null;   // original location (for stop_edit contributions)
-  before_lng: number | null;
-  decline_reason: string | null;
-  reviewed_at: string | null;
-  reviewed_by: number | null;
-  created_at: string;
-  updated_at: string;
-  votes_count?: number;
+interface DuplicateStopPair {
+  stop_a: Pick<Stop, 'id'|'name'|'lat'|'lng'>;
+  stop_b: Pick<Stop, 'id'|'name'|'lat'|'lng'>;
+  distance_m: number; name_similarity: number;
 }
 
-interface Stop {
-  id: number;
-  stop_id: string;        // GTFS stop_id (e.g. "STB_001")
-  stop_name: string;
-  stop_lat: number;
-  stop_lon: number;
-  stop_code: string | null;
-  stop_desc: string | null;
-  wheelchair_accessible: boolean;
-  has_shelter: boolean;
-  updated_at: string;
-  contributions_count?: number;
-}
-
-interface Route {
-  id: number;
-  route_id: string;
-  route_short_name: string;  // e.g. "44C"
-  route_long_name: string;
-  route_type: number;        // GTFS route_type: 3=Bus, 1=Subway, 2=Rail, 0=Tram
-  route_color: string | null; // hex without #
-  trips_count?: number;
-}
-
-interface Badge {
-  id: number;
-  name: string;
-  description: string;
-  icon: string;
-  criteria: string | null;
-  points_threshold: number | null;
-  users_count?: number;
-}
-
-interface BroadcastNotification {
-  id: number;
-  title: string;
-  body: string;
-  type: string;
-  audience: string;
-  sent_to: number;
-  created_at: string;
-}
-
-interface DashboardOverview {
-  dau: number;                   // daily active users
-  mau: number;                   // monthly active users
-  journeys_today: number;
-  pending_contributions: number; // drives the sidebar badge count
-  total_users: number;
-  total_contributions: number;
-}
-
-interface OtpStatus {
-  last_sync: string | null;
-  last_duration: number | null;  // seconds
-  status: "ok" | "running" | "failed" | "unknown";
-  error: string | null;
-}
-
-interface SystemHealth {
-  otp: OtpStatus;
-  queue: { pending: number; failed: number };
-}
-
-interface PaginatedResponse<T> {
-  data: T[];
-  current_page: number;
-  last_page: number;
-  per_page: number;
-  total: number;
-}
+interface OfficialValidationNotice { code, severity: 'ERROR'|'WARNING'|'INFO', totalNotices, sampleNotices }
+interface OfficialValidationResult { available: boolean, notices?, validated_at?, error?, setup? }
 ```
 
 ---
 
 ## Store
 
-### `store/authStore.ts` — Zustand with persist
+### `store/authStore.ts`
 
 ```ts
 interface AuthState {
@@ -475,15 +492,7 @@ interface AuthState {
 }
 ```
 
-**Key**: `"hopln:console:auth"` in `localStorage` (managed by Zustand `persist` middleware).
-
-**`setAuth(user, token)`**: writes the token to `localStorage["hopln_console_token"]` (read by the Axios interceptor), then sets `{ user, token, isAuthenticated: true }`.
-
-**`logout()`**: removes `hopln_console_token` from localStorage, resets state to `{ user: null, token: null, isAuthenticated: false }`. The Sidebar's `NavUser` component then calls `window.location.href = "/login"`.
-
-**`partialize`**: only `user`, `token`, and `isAuthenticated` are persisted. Derived/computed state is excluded.
-
-**Static access**: the router guards call `useAuthStore.getState()` directly (not the hook), allowing synchronous reads outside of React's render cycle inside `beforeLoad`.
+Persisted under `"hopln:console:auth"` in `localStorage` via Zustand `persist`. The Axios interceptor reads `localStorage["hopln_console_token"]` directly. The router guards call `useAuthStore.getState()` synchronously (safe outside React render cycle).
 
 ---
 
@@ -491,79 +500,63 @@ interface AuthState {
 
 ### `lib/utils.ts`
 
-| Export | Signature | Description |
-|--------|-----------|-------------|
-| `cn` | `(...inputs: ClassValue[]) => string` | Merges Tailwind classes using `clsx` + `tailwind-merge`. Handles conditional classes and deduplication. |
-| `formatDate` | `(dateStr: string) => string` | Formats an ISO date string as `"Jan 1, 2025"` using date-fns `format`. |
-| `formatDateTime` | `(dateStr: string) => string` | Formats as `"Jan 1, 2025 14:30"` (24-hour). |
-| `timeAgo` | `(dateStr: string) => string` | Returns a relative string like `"3 hours ago"` using date-fns `formatDistanceToNow`. |
-| `formatNumber` | `(n: number) => string` | Formats integers with locale-appropriate thousand separators via `Intl.NumberFormat`. |
+| Export | Description |
+|--------|-------------|
+| `cn(...inputs)` | Merges Tailwind classes with `clsx` + `tailwind-merge` |
+| `formatDate(s)` | ISO → `"Jan 1, 2025"` |
+| `formatDateTime(s)` | ISO → `"Jan 1, 2025 14:30"` |
+| `timeAgo(s)` | ISO → `"3 hours ago"` |
+| `formatNumber(n)` | Integer with locale thousand separators |
 
 ### `lib/queryClient.ts`
 
 ```ts
-export const queryClient = new QueryClient({
+new QueryClient({
   defaultOptions: {
-    queries: {
-      staleTime: 30_000,          // data considered fresh for 30 seconds
-      retry: 1,                   // one automatic retry on failure
-      refetchOnWindowFocus: false, // no silent refetch on tab switch
-    },
+    queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: false },
   },
-});
+})
 ```
-
-The `queryClient` instance is provided at the root in `main.tsx` via `<QueryClientProvider client={queryClient}>`. The Dashboard's sidebar badge for pending contributions polls every 30 seconds (`refetchInterval: 30_000`).
 
 ---
 
 ## UI Components
 
-The console uses **shadcn/ui** (New York style, Zinc base). Because the shadcn CLI has a workspace-detection bug when run from a directory that has sibling `package.json` files, all components were installed manually by fetching from the shadcn registry JSON API.
+shadcn/ui (New York style, Zinc base). Because the shadcn CLI has a monorepo-detection bug in this workspace, all components were installed by fetching directly from the registry JSON API.
 
 ### shadcn components (`src/components/ui/`)
 
-| Component | Source | Used for |
-|-----------|--------|----------|
-| `button` | shadcn | All CTAs and action buttons |
-| `input` | shadcn | All text form fields |
-| `label` | shadcn | Form field labels |
-| `textarea` | shadcn | Multi-line text inputs (decline reasons, notification body) |
-| `select` | shadcn | Dropdowns (route type, notification audience) |
-| `card` | shadcn | Stat cards, form panels, detail panes |
-| `table` | shadcn | All data tables (users, stops, routes, contributions, notifications history) |
-| `badge` | shadcn | Status chips (contribution status, user role, OTP health) |
-| `dialog` | shadcn | Confirmation modals |
-| `tabs` | shadcn | User detail tabs, contributions filter tabs, settings sub-nav |
-| `avatar` | shadcn | User profile images with fallback initials |
-| `dropdown-menu` | shadcn | Row action menus, sidebar user menu |
-| `separator` | shadcn | Visual dividers in sidebar and topbar |
-| `skeleton` | shadcn | Loading placeholder rows in tables |
-| `scroll-area` | shadcn | Scrollable content regions |
-| `tooltip` | shadcn | Icon-only button labels |
-| `sonner` | Sonner library | Global toast notifications (replaces per-page useState toast pattern) |
-| `checkbox` | shadcn | Stop accessibility/shelter toggles in StopEditorPage |
-| `sidebar` | shadcn | Full sidebar system with collapsible icon mode (1500-line component) |
-| `sheet` | shadcn | Mobile sidebar drawer (used internally by sidebar component) |
-| `breadcrumb` | shadcn | Navigation breadcrumbs |
+| Component | Used for |
+|-----------|----------|
+| `button` | All CTAs and action buttons |
+| `input` | Text form fields |
+| `textarea` | Multi-line text (decline reasons, notification body) |
+| `select` | Dropdowns (route type, notification audience) |
+| `card` | Stat cards, form panels, detail panes |
+| `table` | All data tables |
+| `badge` | Status chips (contribution status, role, OTP health, quality scores) |
+| `dialog` | Confirmation modals, merge dialog |
+| `tabs` | Detail page sub-nav, GtfsPage (export / validator tabs) |
+| `avatar` | User profile images |
+| `dropdown-menu` | Row actions, export format selector, sidebar user menu |
+| `separator` | Visual dividers |
+| `skeleton` | Loading placeholder rows |
+| `scroll-area` | Scrollable content regions |
+| `tooltip` | Icon-only button labels |
+| `checkbox` | Toggles in stop / calendar editors |
+| `progress` | Name-similarity bar in duplicate detector |
+| `radio-group` | Canonical stop selector in merge dialog |
+| `sidebar` | Full sidebar system with collapsible icon mode |
+| `sheet` | Mobile sidebar drawer |
+| `breadcrumb` | Navigation breadcrumbs |
 
-### Layout components (`src/components/layout/`)
+### Color System
 
-| Component | Description |
-|-----------|-------------|
-| `AppShell` | Root layout — wraps `SidebarProvider` + `AppSidebar` + `SidebarInset` + `Topbar` |
-| `AppSidebar` | Navigation sidebar with collapsible icon mode, nav groups, pending badge, user dropdown |
-| `Topbar` | 48px header with `SidebarTrigger`, separator, and dynamic page title |
-
-### Color system
-
-Primary brand color: `#FF6F00` (Hopln orange) mapped to `--primary` and `--ring` CSS custom properties.
-
-Active sidebar item: `bg-orange-50 text-orange-600` (overrides the default `sidebar-accent` token).
-
-Role badge colors: `user→zinc`, `moderator→blue`, `admin→amber`, `superadmin→default (orange)`.
-
-Contribution status badge colors: `pending→default`, `approved→green`, `declined→red`.
+- Primary brand: `#FF6F00` (Hopln orange) → `--primary`, `--ring`
+- Active sidebar item: `bg-orange-50 text-orange-600`
+- Quality score gauge: red `< 40` / amber `< 70` / green `≥ 70`
+- Role badges: `user→zinc`, `moderator→blue`, `admin→amber`, `superadmin→orange`
+- Contribution status: `pending→default`, `approved→green`, `declined→red`
 
 ---
 
@@ -573,58 +566,34 @@ Contribution status badge colors: `pending→default`, `approved→green`, `decl
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `react` | ^19.2 | UI framework |
-| `react-dom` | ^19.2 | DOM renderer |
+| `react` + `react-dom` | ^19.2 | UI framework |
 | `@tanstack/react-router` | ^1.170 | Type-safe SPA routing with `beforeLoad` guards |
 | `@tanstack/react-query` | ^5.100 | Server-state caching, polling, mutation lifecycle |
-| `@tanstack/react-router-devtools` | ^1.167 | Router devtools panel (dev only, rendered in app) |
-| `@tanstack/react-table` | ^8.21 | Headless table logic (column definitions, sorting) |
-| `zustand` | ^5.0 | Lightweight client state — auth session |
+| `@tanstack/react-table` | ^8.21 | Headless table logic |
+| `zustand` | ^5.0 | Auth session state |
 | `axios` | ^1.16 | HTTP client with interceptors |
-| `react-map-gl` | ^8.1 | React wrapper for Mapbox GL JS (import from `react-map-gl/mapbox`) |
-| `mapbox-gl` | ^3.24 | Mapbox GL JS core (peer dep for react-map-gl v8) |
-| `recharts` | ^3.8 | Composable chart library (AreaChart, BarChart, LineChart) |
-| `sonner` | ^2.0 | Toast notifications — `<Toaster>` in root + `toast.success/error()` |
-| `date-fns` | ^4.3 | Date formatting and relative time strings |
-| `react-hook-form` | ^7.76 | Form state management with minimal re-renders |
-| `@hookform/resolvers` | ^5.4 | Zod adapter for react-hook-form validation |
+| `react-map-gl` | ^8.1 | React wrapper for Mapbox GL JS |
+| `mapbox-gl` | ^3.24 | Mapbox GL JS core |
+| `recharts` | ^3.8 | Charts (AreaChart, BarChart, RadialBarChart for quality gauge) |
+| `sonner` | ^2.0 | Toast notifications |
+| `date-fns` | ^4.3 | Date formatting and relative time |
+| `react-hook-form` + `@hookform/resolvers` | ^7.76 / ^5.4 | Form state + Zod validation |
 | `zod` | ^4.4 | Schema validation |
-| `tailwindcss` | ^4.3 | Utility-first CSS (v4 CSS-first config) |
-| `tailwindcss-animate` | ^1.0 | Tailwind plugin for CSS animations (used by Sheet/Dialog) |
-| `@tailwindcss/vite` | ^4.3 | Vite plugin that runs Tailwind v4 |
-| `clsx` | ^2.1 | Conditional class name utility |
-| `tailwind-merge` | ^3.6 | Deduplicates conflicting Tailwind classes |
-| `class-variance-authority` | ^0.7 | CVA — variant-based component styling |
+| `tailwindcss` | ^4.3 | Utility-first CSS |
+| `tailwindcss-animate` | ^1.0 | CSS animations (Sheet, Dialog) |
+| `@tailwindcss/vite` | ^4.3 | Vite integration |
+| `clsx` + `tailwind-merge` + `class-variance-authority` | — | Class utilities |
 | `lucide-react` | ^1.16 | Icon set |
-| `@radix-ui/react-avatar` | ^1.1 | Accessible avatar primitive |
-| `@radix-ui/react-checkbox` | ^1.3 | Accessible checkbox primitive |
-| `@radix-ui/react-dialog` | ^1.1 | Accessible dialog/modal primitive |
-| `@radix-ui/react-dropdown-menu` | ^2.1 | Accessible dropdown menu primitive |
-| `@radix-ui/react-label` | ^2.1 | Accessible label primitive |
-| `@radix-ui/react-scroll-area` | ^1.2 | Cross-browser scroll area |
-| `@radix-ui/react-select` | ^2.2 | Accessible select/combobox primitive |
-| `@radix-ui/react-separator` | ^1.1 | Semantic separator |
-| `@radix-ui/react-slot` | ^1.2 | `asChild` prop composition (used by `SidebarMenuButton`, `Button`, etc.) |
-| `@radix-ui/react-tabs` | ^1.1 | Accessible tabs primitive |
-| `@radix-ui/react-tooltip` | ^1.2 | Accessible tooltip primitive |
+| `@radix-ui/*` | various | Accessible UI primitives |
 
 ### Dev Dependencies
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `vite` | ^8.0 | Dev server + production bundler |
-| `@vitejs/plugin-react` | ^6.0 | React Fast Refresh + JSX transform |
+| `vite` | ^8.0 | Dev server + bundler |
+| `@vitejs/plugin-react` | ^6.0 | React Fast Refresh |
 | `typescript` | ~6.0 | TypeScript compiler |
-| `@types/react` | ^19.2 | React type definitions |
-| `@types/react-dom` | ^19.2 | ReactDOM type definitions |
-| `@types/mapbox-gl` | ^3.4 | Mapbox GL type definitions |
-| `@types/node` | ^24.12 | Node.js type definitions (for `path` in vite.config.ts) |
-| `eslint` | ^10.3 | Linter |
-| `@eslint/js` | ^10.0 | ESLint JS config |
-| `eslint-plugin-react-hooks` | ^7.1 | Enforces Rules of Hooks |
-| `eslint-plugin-react-refresh` | ^0.5 | Warns on non-fast-refresh-compatible exports |
-| `typescript-eslint` | ^8.59 | TypeScript ESLint parser + rules |
-| `globals` | ^17.6 | ESLint environment globals |
+| `eslint` + plugins | ^10 | Linting |
 
 ---
 
@@ -632,15 +601,12 @@ Contribution status badge colors: `pending→default`, `approved→green`, `decl
 
 ### Tailwind v4 Class Conventions
 
-Tailwind v4 changed some utility names. Use these canonical forms to avoid IDE warnings:
-
 | v3 (avoid) | v4 (use) |
 |------------|----------|
 | `bg-gradient-to-br` | `bg-linear-to-br` |
-| `h-[520px]` | `h-130` (if 520 = 32.5rem = 130 × 4px) |
 | `flex-[2]` | `flex-2` |
 
-Arbitrary values (`h-[N]`, `w-[N]`) still work but generate IDE warnings in v4 projects when a scale equivalent exists.
+Arbitrary values (`h-[N]`) still work but trigger IDE warnings when a scale equivalent exists.
 
 ### react-map-gl v8 Import
 
@@ -653,18 +619,10 @@ import "mapbox-gl/dist/mapbox-gl.css";
 
 ### shadcn CLI Workaround
 
-The shadcn CLI (any version) fails in this workspace with:
-
-```
-Could not load the workspace config in D:\React\hopln
-```
-
-Root cause: the CLI walks up from `hopln-console/` to `d:\React\`, finds sibling `hopln/package.json` (Expo app), and treats the parent as a monorepo root. It then tries to load `hopln/` as a workspace member, which fails.
-
-Workaround: fetch component JSON directly from the shadcn registry and write the files manually:
+The shadcn CLI fails in this workspace because it finds the sibling `hopln/package.json` (Expo app) and treats the parent as a monorepo root. Install components manually by fetching registry JSON:
 
 ```
 https://ui.shadcn.com/r/styles/new-york/{component-name}.json
 ```
 
-Correct local import paths (replace any `@/registry/new-york/...` references with `@/components/ui/...`, `@/lib/...`, `@/hooks/...`).
+Replace any `@/registry/new-york/...` import paths with `@/components/ui/...`, `@/lib/...`, `@/hooks/...`.

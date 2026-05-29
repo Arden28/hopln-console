@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fetchGtfsStatus, validateGtfs, exportGtfs } from "@/api/gtfs";
 import { fetchOtpLog, cancelOtpJob, type OtpLogEntry } from "@/api/otp";
+import { fetchOfficialValidation, exportAs as exportAsFormat } from "@/api/quality";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,6 +40,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   CheckCircle2Icon,
   XCircleIcon,
   AlertTriangleIcon,
@@ -54,9 +62,11 @@ import {
   ServerIcon,
   ZapIcon,
   StopCircleIcon,
+  DownloadIcon,
+  ShieldCheckIcon,
 } from "lucide-react";
 import { formatDateTime, timeAgo } from "@/lib/utils";
-import type { GtfsValidationResult } from "@/types";
+import type { GtfsValidationResult, OfficialValidationResult } from "@/types";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -131,6 +141,75 @@ function ValidationResultPanel({ result }: { result: GtfsValidationResult }) {
   );
 }
 
+// ── Official Validator panel ────────────────────────────────────────────────
+
+function OfficialValidatorPanel({ result }: { result: OfficialValidationResult }) {
+  if (!result.available) {
+    return (
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">
+          {result.setup?.instructions ?? "The official GTFS validator is not configured."}
+        </p>
+        {result.setup?.env_vars && (
+          <div className="rounded bg-muted p-3 text-xs font-mono space-y-1">
+            {Object.entries(result.setup.env_vars).map(([k, v]) => (
+              <div key={k}><span className="text-foreground">{k}</span>=<span className="text-muted-foreground">{v}</span></div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (result.error) {
+    return <p className="text-sm text-destructive">{result.error}</p>;
+  }
+
+  const errors   = (result.notices ?? []).filter((n) => n.severity === "ERROR");
+  const warnings = (result.notices ?? []).filter((n) => n.severity === "WARNING");
+  const infos    = (result.notices ?? []).filter((n) => n.severity === "INFO");
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        {errors.length === 0
+          ? <CheckCircle2Icon size={13} className="text-emerald-500" />
+          : <XCircleIcon size={13} className="text-destructive" />}
+        <span>{errors.length} error{errors.length !== 1 ? "s" : ""}</span>
+        <span>·</span>
+        <AlertTriangleIcon size={13} className="text-yellow-500" />
+        <span>{warnings.length} warning{warnings.length !== 1 ? "s" : ""}</span>
+        {result.validated_at && (
+          <span className="ml-auto">{new Date(result.validated_at).toLocaleString()}</span>
+        )}
+      </div>
+      <div className="max-h-60 overflow-auto space-y-1">
+        {[...errors, ...warnings, ...infos].map((n, i) => (
+          <div
+            key={i}
+            className={`flex gap-2 rounded-sm px-2 py-1 text-xs ${
+              n.severity === "ERROR"   ? "bg-destructive/5" :
+              n.severity === "WARNING" ? "bg-yellow-50 dark:bg-yellow-950/20" :
+              "bg-muted/30"
+            }`}
+          >
+            <span className={`font-mono shrink-0 ${
+              n.severity === "ERROR"   ? "text-destructive" :
+              n.severity === "WARNING" ? "text-yellow-700"  :
+              "text-muted-foreground"
+            }`}>
+              {n.code}
+            </span>
+            <span className="text-muted-foreground">
+              {n.totalNotices}× {n.sampleNotices?.[0]?.message ?? ""}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const EVENT_ICONS: Record<string, React.ElementType> = {
   export:       UploadCloudIcon,
   validate:     FileCheckIcon,
@@ -189,9 +268,11 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function GtfsPage() {
   const qc = useQueryClient();
-  const [liveResult, setLiveResult] = React.useState<GtfsValidationResult | null>(null);
-  const [page, setPage] = React.useState(1);
-  const [eventFilter, setEventFilter] = React.useState("all");
+  const [liveResult, setLiveResult]           = React.useState<GtfsValidationResult | null>(null);
+  const [officialResult, setOfficialResult]   = React.useState<OfficialValidationResult | null>(null);
+  const [exportingFormat, setExportingFormat] = React.useState<string | null>(null);
+  const [page, setPage]         = React.useState(1);
+  const [eventFilter, setEventFilter]   = React.useState("all");
   const [statusFilter, setStatusFilter] = React.useState("all");
 
   const { data: status, isLoading } = useQuery({
@@ -265,6 +346,35 @@ export default function GtfsPage() {
     onError: () => toast.error("Failed to request cancellation."),
   });
 
+  const officialValidateMutation = useMutation({
+    mutationFn: fetchOfficialValidation,
+    onSuccess: (result) => {
+      setOfficialResult(result);
+      if (!result.available) {
+        toast.info("Official validator not configured.");
+      } else if (result.error) {
+        toast.error(result.error);
+      } else {
+        const errors = (result.notices ?? []).filter((n) => n.severity === "ERROR").length;
+        errors === 0
+          ? toast.success("Official validation passed.")
+          : toast.error(`Official validation: ${errors} error(s) found.`);
+      }
+    },
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Request failed."),
+  });
+
+  async function handleExportAs(format: "gtfs" | "gtfs-flex" | "excel" | "netex") {
+    setExportingFormat(format);
+    try {
+      await exportAsFormat(format);
+    } catch {
+      toast.error(`Export as ${format} failed.`);
+    } finally {
+      setExportingFormat(null);
+    }
+  }
+
   const statusColor =
     syncStatus === "ok"                ? "text-emerald-600" :
     syncStatus === "running"           ? "text-blue-600"    :
@@ -286,7 +396,7 @@ export default function GtfsPage() {
       </div>
 
       {/* Top cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
         {/* Validation card */}
         <div className="rounded-lg border p-5 space-y-3">
@@ -347,7 +457,7 @@ export default function GtfsPage() {
                   Sync blocked — fix {displayResult.errors.length} validation error(s) first.
                 </p>
               )}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button disabled={exportMutation.isPending || isRunning}>
@@ -374,6 +484,26 @@ export default function GtfsPage() {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" disabled={!!exportingFormat}>
+                      {exportingFormat
+                        ? <Loader2Icon size={14} className="mr-1.5 animate-spin" />
+                        : <DownloadIcon size={14} className="mr-1.5" />}
+                      Download
+                      <ChevronDownIcon size={12} className="ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={() => handleExportAs("gtfs")}>GTFS (.zip)</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExportAs("gtfs-flex")}>GTFS-Flex (.zip)</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleExportAs("excel")}>Excel (.xlsx)</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExportAs("netex")}>NeTEx XML (beta)</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 {isRunning && (
                   <Button
                     variant="destructive"
@@ -389,6 +519,27 @@ export default function GtfsPage() {
               </div>
             </>
           )}
+        </div>
+        {/* Official Validator card */}
+        <div className="rounded-lg border p-5 space-y-3">
+          <div className="flex items-center gap-2 font-medium text-sm">
+            <ShieldCheckIcon size={16} />
+            Official Validator
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Run the MobilityData GTFS Validator (Java) against the last exported zip.
+          </p>
+          {officialResult && <OfficialValidatorPanel result={officialResult} />}
+          <Button
+            variant="outline"
+            onClick={() => officialValidateMutation.mutate()}
+            disabled={officialValidateMutation.isPending}
+          >
+            {officialValidateMutation.isPending
+              ? <Loader2Icon size={14} className="mr-1.5 animate-spin" />
+              : <ShieldCheckIcon size={14} className="mr-1.5" />}
+            Run Official Validation
+          </Button>
         </div>
       </div>
 

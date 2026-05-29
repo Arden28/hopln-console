@@ -427,3 +427,75 @@ export interface BlocksData {
   unblocked: BlockTrip[];
   total_fleet_size: number;
 }
+
+// ── Data Quality & Compliance (Category 4) ───────────────────────────────────
+
+export interface QualityMetric {
+  key: string;
+  label: string;
+  value: number;
+  total: number;
+  score: number; // 0–100
+  inverse: boolean; // true = lower is better
+}
+
+export interface DataQualityScore {
+  overall: number; // 0–100
+  computed_at: string;
+  metrics: QualityMetric[];
+}
+
+export interface StopGap {
+  stop_id: string;
+  stop_name: string;
+  lat: number;
+  lng: number;
+  gap_m: number;
+  flagged: boolean;
+}
+
+export interface ShapeSegment {
+  from_idx: number;
+  to_idx: number;
+  distance_m: number;
+}
+
+export interface ShapeReversal {
+  point_idx: number;
+  bearing_change_deg: number;
+}
+
+export interface ShapeInspectorResult {
+  trip_id: string;
+  shape_id: string;
+  stop_gaps: StopGap[];
+  teleports: ShapeSegment[];
+  reversals: ShapeReversal[];
+  max_gap_m: number;
+  flagged_stops_count: number;
+}
+
+export interface DuplicateStopPair {
+  stop_a: Pick<Stop, "id" | "name" | "lat" | "lng">;
+  stop_b: Pick<Stop, "id" | "name" | "lat" | "lng">;
+  distance_m: number;
+  name_similarity: number;
+}
+
+export interface OfficialValidationNotice {
+  code: string;
+  severity: "ERROR" | "WARNING" | "INFO";
+  totalNotices: number;
+  sampleNotices: Array<{ message: string; entities?: Record<string, string> }>;
+}
+
+export interface OfficialValidationResult {
+  available: boolean;
+  notices?: OfficialValidationNotice[];
+  validated_at?: string;
+  error?: string;
+  setup?: {
+    instructions: string;
+    env_vars: Record<string, string>;
+  };
+}

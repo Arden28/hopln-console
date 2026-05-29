@@ -6,6 +6,7 @@ import Map, { Marker } from "react-map-gl/mapbox";
 import type { MapRef } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchStop, createStop, updateStop, createStopTime, fetchStops } from "@/api/stops";
+import { snapStop } from "@/api/quality";
 import { fetchRoutes } from "@/api/routes";
 import { approveContribution, declineContribution } from "@/api/contributions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,6 +60,7 @@ import {
   SearchIcon,
   PlusIcon,
   RotateCcwIcon,
+  NavigationIcon,
 } from "lucide-react";
 import type { Contribution, Route, Stop, StopTime } from "@/types";
 
@@ -282,6 +284,31 @@ export function StopEditorPage() {
     onError: () => toast.error("Failed to add stop time"),
   });
 
+  const snapMutation = useMutation({
+    mutationFn: () => snapStop(id!),
+    onSuccess: (result) => {
+      if (result.snapped) {
+        setForm(f => ({
+          ...f,
+          lat: result.snapped_lat.toFixed(6),
+          lng: result.snapped_lng.toFixed(6),
+        }));
+        mapRef.current?.flyTo({
+          center: [result.snapped_lng, result.snapped_lat],
+          zoom: 16,
+          duration: 600,
+        });
+        const msg = result.road_name
+          ? `Snapped ${result.distance_m}m to ${result.road_name}`
+          : `Snapped ${result.distance_m}m to nearest road`;
+        toast.success(msg);
+      } else {
+        toast.info("Stop is already on a road (snapper returned no change).");
+      }
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   // ── Handlers ──────────────────────────────────────────────────
   const lat = parseFloat(form.lat) || DEFAULT_CENTER.lat;
   const lng = parseFloat(form.lng) || DEFAULT_CENTER.lng;
@@ -431,6 +458,21 @@ export function StopEditorPage() {
                       />
                     </div>
                   </div>
+                  {isEdit && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-fit"
+                      onClick={() => snapMutation.mutate()}
+                      disabled={snapMutation.isPending}
+                    >
+                      {snapMutation.isPending
+                        ? <Loader2Icon size={13} className="animate-spin" />
+                        : <NavigationIcon size={13} />}
+                      Snap to road
+                    </Button>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     Search above, click the map, or{" "}
                     <button
